@@ -40,5 +40,20 @@
         "psr-4": {
             "Yusr\\Http\\": "src/"
         }
+    },
+    "require-dev": {
+        "pestphp/pest": "^3.3",
+        "laravel/pint": "^1.18"
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "scripts": {
+        "lint": "pint --test",
+        "lint:fix": "pint",
+        "test": "pest",
+        "format": "pint"
     }
 }

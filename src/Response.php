@@ -47,7 +47,7 @@ class Response implements ResponseInterface
     public function getHeader($name): array
     {
         $name = strtolower($name);
-        if (!isset($this->headers[$name])) {
+        if (! isset($this->headers[$name])) {
             return [];
         }
         return $this->headers[$name];

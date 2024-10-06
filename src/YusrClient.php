@@ -5,7 +5,6 @@ namespace Yusr\Http;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\UriInterface;
 use Yusr\Http\Exceptions\RequestException;
 
 class YusrClient implements ClientInterface
@@ -168,7 +167,9 @@ class YusrClient implements ClientInterface
         return $uri . $separator . $queryString;
     }
 
-    private function __clone() {}
+    private function __clone()
+    {
+    }
 
     public function __wakeup()
     {

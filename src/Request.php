@@ -58,7 +58,7 @@ class Request implements RequestInterface
     {
         $new = clone $this;
         $new->uri = $uri;
-        if (!$preserveHost || !$this->hasHeader('Host')) {
+        if (! $preserveHost || ! $this->hasHeader('Host')) {
             $new->updateHostFromUri();
         }
         return $new;
@@ -89,7 +89,7 @@ class Request implements RequestInterface
     public function getHeader($name): array
     {
         $name = strtolower($name);
-        if (!isset($this->headers[$name])) {
+        if (! isset($this->headers[$name])) {
             return [];
         }
         return $this->headers[$name];

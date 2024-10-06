@@ -32,7 +32,7 @@ class Stream implements StreamInterface
 
     public function detach()
     {
-        if (!isset($this->stream)) {
+        if (! isset($this->stream)) {
             return null;
         }
 
@@ -50,7 +50,7 @@ class Stream implements StreamInterface
 
     public function tell(): int
     {
-        if (!isset($this->stream)) {
+        if (! isset($this->stream)) {
             throw new \RuntimeException('Stream is detached');
         }
 
@@ -64,7 +64,7 @@ class Stream implements StreamInterface
 
     public function eof(): bool
     {
-        return !isset($this->stream) || feof($this->stream);
+        return ! isset($this->stream) || feof($this->stream);
     }
 
     public function isSeekable(): bool
@@ -74,10 +74,10 @@ class Stream implements StreamInterface
 
     public function seek($offset, $whence = SEEK_SET): void
     {
-        if (!isset($this->stream)) {
+        if (! isset($this->stream)) {
             throw new \RuntimeException('Stream is detached');
         }
-        if (!$this->isSeekable()) {
+        if (! $this->isSeekable()) {
             throw new \RuntimeException('Stream is not seekable');
         }
         if (fseek($this->stream, $offset, $whence) === -1) {
@@ -97,10 +97,10 @@ class Stream implements StreamInterface
 
     public function write($string): int
     {
-        if (!isset($this->stream)) {
+        if (! isset($this->stream)) {
             throw new \RuntimeException('Stream is detached');
         }
-        if (!$this->isWritable()) {
+        if (! $this->isWritable()) {
             throw new \RuntimeException('Cannot write to a non-writable stream');
         }
 
@@ -121,10 +121,10 @@ class Stream implements StreamInterface
 
     public function read($length): string
     {
-        if (!isset($this->stream)) {
+        if (! isset($this->stream)) {
             throw new \RuntimeException('Stream is detached');
         }
-        if (!$this->isReadable()) {
+        if (! $this->isReadable()) {
             throw new \RuntimeException('Cannot read from non-readable stream');
         }
         if ($length < 0) {
@@ -141,7 +141,7 @@ class Stream implements StreamInterface
 
     public function getContents(): string
     {
-        if (!isset($this->stream)) {
+        if (! isset($this->stream)) {
             throw new \RuntimeException('Stream is detached');
         }
 
@@ -155,7 +155,7 @@ class Stream implements StreamInterface
 
     public function getMetadata($key = null)
     {
-        if (!isset($this->stream)) {
+        if (! isset($this->stream)) {
             return $key ? null : [];
         }
 
