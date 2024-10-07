@@ -169,7 +169,9 @@ class YusrClient implements ClientInterface
         return $uri . $separator . $queryString;
     }
 
-    private function __clone() {}
+    private function __clone()
+    {
+    }
 
     public function __wakeup()
     {
