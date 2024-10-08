@@ -61,7 +61,7 @@ class Response implements ResponseInterface
     public function getHeaderLine($name): string
     {
         $name = strtolower($name);
-        if (!isset($this->headers[$name])) {
+        if (! isset($this->headers[$name])) {
             return '';
         }
         return implode(', ', $this->headers[$name]);
@@ -77,7 +77,7 @@ class Response implements ResponseInterface
     {
         $new = clone $this;
         $name = strtolower($name);
-        if (!isset($new->headers[$name])) {
+        if (! isset($new->headers[$name])) {
             $new->headers[$name] = [];
         }
         $new->headers[$name] = array_merge($new->headers[$name], (array) $value);

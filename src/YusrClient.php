@@ -36,19 +36,19 @@ class YusrClient implements ClientInterface
     public function sendRequest(RequestInterface $request): ResponseInterface
     {
         $options = $this->prepareOptions($request);
-        $curl = $this->createCurlHandle($request, $options);
+        $curl = $this->createCurlHandleWrapper($request, $options);
 
-        $responseBody = curl_exec($curl);
-        $responseInfo = curl_getinfo($curl);
+        $responseBody = $this->curlExec($curl);
+        $responseInfo = $this->curlGetInfo($curl);
 
         if ($responseBody === false) {
-            $errorMessage = curl_error($curl);
-            $errorCode = curl_errno($curl);
-            curl_close($curl);
+            $errorMessage = $this->curlError($curl);
+            $errorCode = $this->curlErrno($curl);
+            $this->curlClose($curl);
             throw new RequestException("cURL error $errorCode: $errorMessage", $request);
         }
 
-        curl_close($curl);
+        $this->curlClose($curl);
 
         $headers = $this->parseHeaders(substr($responseBody, 0, $responseInfo['header_size']));
         $body = substr($responseBody, $responseInfo['header_size']);
@@ -59,6 +59,7 @@ class YusrClient implements ClientInterface
             $body
         );
     }
+
     public function get(string $uri, array $options = []): ResponseInterface
     {
         return $this->request('GET', $uri, $options);
@@ -109,10 +110,6 @@ class YusrClient implements ClientInterface
     private function prepareOptions(RequestInterface $request): array
     {
         $options = $this->defaultOptions;
-
-        // Merge request-specific options here
-        // For example, you might want to override the timeout for specific requests
-
         return $options;
     }
 
@@ -139,6 +136,10 @@ class YusrClient implements ClientInterface
         curl_setopt_array($curl, $curlOptions);
 
         return $curl;
+    }
+    protected function createCurlHandleWrapper(RequestInterface $request, array $options): \CurlHandle
+    {
+        return $this->createCurlHandle($request, $options);
     }
     private function prepareHeaders(RequestInterface $request): array
     {
