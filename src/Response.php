@@ -18,7 +18,10 @@ class Response implements ResponseInterface
     public function __construct(int $statusCode, array $headers = [], $body = '', string $version = '1.1', string $reason = '')
     {
         $this->statusCode = $statusCode;
-        $this->headers = $headers;
+        $this->headers = array_change_key_case($headers, CASE_LOWER);
+        foreach ($this->headers as $name => $value) {
+            $this->headers[$name] = (array) $value;
+        }
         $this->body = $body instanceof StreamInterface ? $body : new Stream($body);
         $this->protocolVersion = $version;
         $this->reasonPhrase = $reason;
@@ -57,7 +60,11 @@ class Response implements ResponseInterface
 
     public function getHeaderLine($name): string
     {
-        return implode(', ', $this->getHeader($name));
+        $name = strtolower($name);
+        if (!isset($this->headers[$name])) {
+            return '';
+        }
+        return implode(', ', $this->headers[$name]);
     }
 
     public function withHeader($name, $value): self
@@ -66,19 +73,16 @@ class Response implements ResponseInterface
         $new->headers[strtolower($name)] = (array) $value;
         return $new;
     }
-
     public function withAddedHeader($name, $value): self
     {
         $new = clone $this;
         $name = strtolower($name);
-        if (isset($new->headers[$name])) {
-            $new->headers[$name] = array_merge($new->headers[$name], (array) $value);
-        } else {
-            $new->headers[$name] = (array) $value;
+        if (!isset($new->headers[$name])) {
+            $new->headers[$name] = [];
         }
+        $new->headers[$name] = array_merge($new->headers[$name], (array) $value);
         return $new;
     }
-
     public function withoutHeader($name): self
     {
         $new = clone $this;

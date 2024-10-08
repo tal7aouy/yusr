@@ -1,38 +1,101 @@
 <?php
 
-describe("Test Request", function () {
-    it("should be able to create a request", function () {
-        $request = new Request("GET", "https://jsonplaceholder.typicode.com/posts");
-        expect($request)->toBeInstanceOf(Request::class);
-    });
+use Yusr\Http\Request;
+use Yusr\Http\Stream;
+use Yusr\Http\Uri;
 
-    it("should be able to create a request with headers", function () {
-        $request = new Request("GET", "https://jsonplaceholder.typicode.com/posts");
-        $request->withHeader("Accept", "application/json");
-        expect($request->getHeader("Accept"))->toBe("application/json");
-    });
+test('Request can be created with minimal parameters', function () {
+    $request = new Request('GET', 'https://example.com');
 
-    it("should be able to create a request with body", function () {
-        $request = new Request("GET", "https://jsonplaceholder.typicode.com/posts");
-        $request->withBody(new Stream("Hello, world!"));
-        expect($request->getBody())->toBe("Hello, world!");
-    });
+    expect($request->getMethod())->toBe('GET');
+    expect($request->getUri()->__toString())->toBe('https://example.com');
+    expect($request->getProtocolVersion())->toBe('1.1');
+});
 
-    it("should be able to create a request with uri", function () {
-        $request = new Request("GET", "https://jsonplaceholder.typicode.com/posts");
-        $request->withUri(new Uri("https://jsonplaceholder.typicode.com/posts"));
-        expect($request->getUri())->toBe("https://jsonplaceholder.typicode.com/posts");
-    });
+test('Request with custom headers and body', function () {
+    $body = new Stream('test body');
+    $request = new Request(
+        'POST',
+        'https://api.example.com/users',
+        ['Content-Type' => 'application/json'],
+        $body,
+        '2.0'
+    );
 
-    it("should be able to create a request with query params", function () {
-        $request = new Request("GET", "https://jsonplaceholder.typicode.com/posts");
-        $request->withQueryParams(["page" => 1]);
-        expect($request->getQueryParams())->toBe(["page" => 1]);
-    });
+    expect($request->getMethod())->toBe('POST');
+    expect($request->getUri()->__toString())->toBe('https://api.example.com/users');
+    expect($request->getProtocolVersion())->toBe('2.0');
+    expect($request->getHeaders())->toHaveKey('content-type');
+    expect($request->getHeaderLine('content-type'))->toBe('application/json');
+    expect($request->getBody())->toBe($body);
+});
 
-    it("should be able to create a request with method", function () {
-        $request = new Request("GET", "https://jsonplaceholder.typicode.com/posts");
-        $request->withMethod("POST");
-        expect($request->getMethod())->toBe("POST");
-    });
+test('withRequestTarget modifies the request target', function () {
+    $request = new Request('GET', 'https://example.com');
+    $newRequest = $request->withRequestTarget('/custom-target');
+
+    expect($newRequest->getRequestTarget())->toBe('/custom-target');
+    expect($request->getRequestTarget())->not->toBe('/custom-target');
+});
+
+test('withMethod changes the HTTP method', function () {
+    $request = new Request('GET', 'https://example.com');
+    $newRequest = $request->withMethod('POST');
+
+    expect($newRequest->getMethod())->toBe('POST');
+    expect($request->getMethod())->toBe('GET');
+});
+
+test('withUri updates the URI and optionally the host header', function () {
+    $request = new Request('GET', 'https://example.com');
+    $newUri = new Uri('https://api.example.com');
+
+    $newRequest = $request->withUri($newUri);
+    expect($newRequest->getUri()->__toString())->toBe('https://api.example.com');
+    expect($newRequest->getHeaderLine('Host'))->toBe('api.example.com');
+
+    $preserveHostRequest = $request->withUri($newUri, true);
+    expect($preserveHostRequest->getHeaderLine('Host'))->toBe('example.com');
+});
+
+test('header methods work correctly', function () {
+    $request = new Request('GET', 'https://example.com', ['X-Test' => 'value']);
+
+    expect($request->hasHeader('X-Test'))->toBeTrue();
+    expect($request->getHeader('X-Test'))->toBe(['value']);
+    expect($request->getHeaderLine('X-Test'))->toBe('value');
+
+    $newRequest = $request->withHeader('X-New', 'new-value');
+    expect($newRequest->hasHeader('X-New'))->toBeTrue();
+    expect($newRequest->getHeaderLine('X-New'))->toBe('new-value');
+
+    $addedRequest = $newRequest->withAddedHeader('X-New', 'another-value');
+    expect($addedRequest->getHeader('X-New'))->toBe(['new-value', 'another-value']);
+
+    $removedRequest = $addedRequest->withoutHeader('X-New');
+    expect($removedRequest->hasHeader('X-New'))->toBeFalse();
+});
+
+test('withBody replaces the body stream', function () {
+    $request = new Request('GET', 'https://example.com');
+    $newBody = new Stream('new body content');
+
+    $newRequest = $request->withBody($newBody);
+
+    expect($newRequest->getBody())->toBe($newBody);
+    expect($request->getBody())->not->toBe($newBody);
+});
+
+test('getHeaders returns all headers', function () {
+    $headers = [
+        'Content-Type' => 'application/json',
+        'X-Custom' => ['value1', 'value2'],
+    ];
+    $request = new Request('GET', 'https://example.com', $headers);
+
+    expect($request->getHeaders())->toBe([
+        'content-type' => ['application/json'],
+        'x-custom' => ['value1', 'value2'],
+        'host' => ['example.com'],
+    ]);
 });

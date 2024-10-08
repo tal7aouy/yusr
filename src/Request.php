@@ -21,10 +21,11 @@ class Request implements RequestInterface
     {
         $this->method = strtoupper($method);
         $this->uri = is_string($uri) ? new Uri($uri) : $uri;
-        $this->headers = $headers;
+        $this->setHeaders($headers);
         $this->body = $body instanceof StreamInterface ? $body : new Stream($body ?? '');
         $this->protocolVersion = $version;
         $this->requestTarget = $this->uri->getPath() ?: '/';
+        $this->updateHostFromUri();
     }
 
     public function getRequestTarget(): string
@@ -138,6 +139,14 @@ class Request implements RequestInterface
         $new = clone $this;
         $new->body = $body;
         return $new;
+    }
+
+    private function setHeaders(array $headers): void
+    {
+        $this->headers = [];
+        foreach ($headers as $name => $value) {
+            $this->headers[strtolower($name)] = (array) $value;
+        }
     }
 
     private function updateHostFromUri(): void
