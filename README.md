@@ -3,6 +3,7 @@
 <p align="center">
   <img src="art/logo.png" alt="YusrClient Logo" width="300">
 </p>
+
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/tal7aouy/yusr.svg?style=flat-square)](https://packagist.org/packages/tal7aouy/yusr)
 [![Total Downloads](https://img.shields.io/packagist/dt/tal7aouy/yusr.svg?style=flat-square)](https://packagist.org/packages/tal7aouy/yusr)
 [![License](https://img.shields.io/packagist/l/tal7aouy/yusr.svg?style=flat-square)](https://packagist.org/packages/tal7aouy/yusr)
