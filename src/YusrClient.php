@@ -38,17 +38,17 @@ class YusrClient implements ClientInterface
         $options = $this->prepareOptions($request);
         $curl = $this->createCurlHandleWrapper($request, $options);
 
-        $responseBody = $this->curlExec($curl);
-        $responseInfo = $this->curlGetInfo($curl);
+        $responseBody = curl_exec($curl);
+        $responseInfo = curl_getinfo($curl);
 
         if ($responseBody === false) {
-            $errorMessage = $this->curlError($curl);
-            $errorCode = $this->curlErrno($curl);
-            $this->curlClose($curl);
+            $errorMessage = curl_error($curl);
+            $errorCode = curl_errno($curl);
+            curl_close($curl);
             throw new RequestException("cURL error $errorCode: $errorMessage", $request);
         }
 
-        $this->curlClose($curl);
+        curl_close($curl);
 
         $headers = $this->parseHeaders(substr($responseBody, 0, $responseInfo['header_size']));
         $body = substr($responseBody, $responseInfo['header_size']);
@@ -170,9 +170,7 @@ class YusrClient implements ClientInterface
         return $uri . $separator . $queryString;
     }
 
-    private function __clone()
-    {
-    }
+    private function __clone() {}
 
     public function __wakeup()
     {
