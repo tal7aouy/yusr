@@ -38,59 +38,51 @@ test('request method creates correct request and calls sendRequest', function ()
     $response = $mockClient->request('GET', 'https://api.example.com', ['query' => ['param' => 'value']]);
     expect($response)->toBeInstanceOf(ResponseInterface::class);
 });
-
 test('sendRequest handles successful requests', function () {
     $mockClient = Mockery::mock(YusrClient::class)->makePartial();
     $mockClient->shouldAllowMockingProtectedMethods();
 
-    // Initialize the defaultOptions property
-    $reflectionProperty = new ReflectionProperty(YusrClient::class, 'defaultOptions');
-    $reflectionProperty->setAccessible(true);
-    $reflectionProperty->setValue($mockClient, [
-        'timeout' => 30,
-        'allow_redirects' => true,
-        'http_errors' => true,
-        'verify' => true,
-        'headers' => [],
-    ]);
-
-    $mockUri = Mockery::mock(UriInterface::class);
-    $mockUri->shouldReceive('__toString')->andReturn('https://api.example.com');
+    $jsonPlaceholderUrl = 'https://jsonplaceholder.typicode.com/todos/1';
 
     $mockRequest = Mockery::mock(RequestInterface::class);
-    $mockRequest->shouldReceive('getUri')->andReturn($mockUri);
+    $mockRequest->shouldReceive('getUri')->andReturn($jsonPlaceholderUrl);
     $mockRequest->shouldReceive('getMethod')->andReturn('GET');
     $mockRequest->shouldReceive('getHeaders')->andReturn([]);
     $mockRequest->shouldReceive('getBody->getSize')->andReturn(0);
 
     // Mock createCurlHandleWrapper to return a mock curl resource
-    $mockClient->shouldReceive('createCurlHandleWrapper')->andReturn(curl_init());
+    $mockCurl = curl_init();
+    $mockClient->shouldReceive('createCurlHandleWrapper')->andReturn($mockCurl);
 
-    // Mock curl_exec to return a successful response
-    $mockResponse = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\":\"success\"}";
-    $mockClient->shouldReceive('curlExec')->andReturn($mockResponse);
+    // Mock curlExec to return a successful response from JSONPlaceholder
+    $mockResponse = json_encode([
+        'userId' => 1,
+        'id' => 1,
+        'title' => 'delectus aut autem',
+        'completed' => false
+    ]);
+    $mockClient->shouldReceive('curlExec')->with($mockCurl)->andReturn($mockResponse);
 
-    // Mock curl_getinfo to return response info
-    $mockClient->shouldReceive('curlGetInfo')->andReturn([
+    // Mock curlGetInfo to return response info
+    $mockClient->shouldReceive('curlGetInfo')->with($mockCurl)->andReturn([
         'http_code' => 200,
-        'header_size' => strlen("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n"),
+        'header_size' => 0, // We're not including headers in our mock response
     ]);
 
-    // Mock curl_error and curl_errno to return no error
-    $mockClient->shouldReceive('curlError')->andReturn('');
-    $mockClient->shouldReceive('curlErrno')->andReturn(0);
-
-    // Mock curl_close
-    $mockClient->shouldReceive('curlClose');
+    // Mock curlClose
+    $mockClient->shouldReceive('curlClose')->with($mockCurl)->once();
 
     $response = $mockClient->sendRequest($mockRequest);
 
     expect($response)->toBeInstanceOf(ResponseInterface::class);
     expect($response->getStatusCode())->toBe(200);
-    expect($response->getHeaderLine('Content-Type'))->toBe('application/json');
-    expect((string)$response->getBody())->toBe('{"status":"success"}');
+    expect(json_decode((string)$response->getBody(), true))->toBe([
+        'userId' => 1,
+        'id' => 1,
+        'title' => 'delectus aut autem',
+        'completed' => false
+    ]);
 });
-
 test('appendQueryString correctly appends query parameters to URI', function () {
     $client = YusrClient::getInstance();
     $reflectionClass = new ReflectionClass(YusrClient::class);

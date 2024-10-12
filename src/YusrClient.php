@@ -12,17 +12,16 @@ use Yusr\Http\Exceptions\RequestException;
 class YusrClient implements ClientInterface
 {
     private static ?YusrClient $instance = null;
-    private array $defaultOptions;
-
+    private array $defaultOptions = [
+        'timeout' => 30,
+        'allow_redirects' => true,
+        'http_errors' => true,
+        'verify' => true,
+        'headers' => [],
+    ];
     private function __construct(array $options = [])
     {
-        $this->defaultOptions = array_merge([
-            'timeout' => 30,
-            'allow_redirects' => true,
-            'http_errors' => true,
-            'verify' => true,
-            'headers' => [],
-        ], $options);
+        $this->defaultOptions = array_merge($this->defaultOptions, $options);
     }
 
     public static function getInstance(array $options = []): YusrClient
@@ -38,17 +37,17 @@ class YusrClient implements ClientInterface
         $options = $this->prepareOptions($request);
         $curl = $this->createCurlHandleWrapper($request, $options);
 
-        $responseBody = curl_exec($curl);
-        $responseInfo = curl_getinfo($curl);
+        $responseBody = $this->curlExec($curl);
+        $responseInfo = $this->curlGetInfo($curl);
 
         if ($responseBody === false) {
-            $errorMessage = curl_error($curl);
-            $errorCode = curl_errno($curl);
-            curl_close($curl);
+            $errorMessage = $this->curlError($curl);
+            $errorCode = $this->curlErrno($curl);
+            $this->curlClose($curl);
             throw new RequestException("cURL error $errorCode: $errorMessage", $request);
         }
 
-        curl_close($curl);
+        $this->curlClose($curl);
 
         $headers = $this->parseHeaders(substr($responseBody, 0, $responseInfo['header_size']));
         $body = substr($responseBody, $responseInfo['header_size']);
@@ -58,6 +57,32 @@ class YusrClient implements ClientInterface
             $headers,
             $body
         );
+    }
+
+    // Add these protected methods to make the class more testable
+    protected function curlExec($curl)
+    {
+        return curl_exec($curl);
+    }
+
+    protected function curlGetInfo($curl, $opt = null)
+    {
+        return curl_getinfo($curl, $opt);
+    }
+
+    protected function curlError($curl)
+    {
+        return curl_error($curl);
+    }
+
+    protected function curlErrno($curl)
+    {
+        return curl_errno($curl);
+    }
+
+    protected function curlClose($curl)
+    {
+        curl_close($curl);
     }
 
     public function get(string $uri, array $options = []): ResponseInterface
@@ -175,5 +200,9 @@ class YusrClient implements ClientInterface
     public function __wakeup()
     {
         throw new \Exception("Cannot unserialize singleton");
+    }
+    protected function curlSetopt($curl, $option, $value)
+    {
+        return curl_setopt($curl, $option, $value);
     }
 }
