@@ -3,7 +3,7 @@
 use Yusr\Http\Response;
 use Yusr\Http\Stream;
 
-test('Response can be created with default values', function () {
+test('Response can be created with default values', function (): void {
     $response = new Response(200);
 
     expect($response->getStatusCode())->toBe(200)
@@ -13,7 +13,7 @@ test('Response can be created with default values', function () {
         ->and($response->getBody())->toBeInstanceOf(Stream::class);
 });
 
-test('Response can be created with custom values', function () {
+test('Response can be created with custom values', function (): void {
     $body = new Stream('Test body');
     $response = new Response(201, ['Content-Type' => 'text/plain'], $body, '2.0', 'Created');
 
@@ -24,7 +24,7 @@ test('Response can be created with custom values', function () {
         ->and($response->getBody())->toBe($body);
 });
 
-test('withProtocolVersion returns a new instance with updated version', function () {
+test('withProtocolVersion returns a new instance with updated version', function (): void {
     $response = new Response(200);
     $newResponse = $response->withProtocolVersion('2.0');
 
@@ -33,7 +33,7 @@ test('withProtocolVersion returns a new instance with updated version', function
         ->and($response->getProtocolVersion())->toBe('1.1');
 });
 
-test('withHeader adds or replaces a header', function () {
+test('withHeader adds or replaces a header', function (): void {
     $response = new Response(200, ['Existing' => 'value']);
     $newResponse = $response->withHeader('New-Header', 'new value');
 
@@ -49,7 +49,7 @@ test('withHeader adds or replaces a header', function () {
     ]);
 });
 
-test('withAddedHeader appends to existing header', function () {
+test('withAddedHeader appends to existing header', function (): void {
     $response = new Response(200, ['Existing' => 'value1']);
     $newResponse = $response->withAddedHeader('Existing', 'value2');
 
@@ -58,7 +58,7 @@ test('withAddedHeader appends to existing header', function () {
     ]);
 });
 
-test('withoutHeader removes a header', function () {
+test('withoutHeader removes a header', function (): void {
     $response = new Response(200, ['Existing' => 'value', 'Remove' => 'me']);
     $newResponse = $response->withoutHeader('Remove');
 
@@ -68,7 +68,7 @@ test('withoutHeader removes a header', function () {
         ->and($newResponse->hasHeader('Remove'))->toBeFalse();
 });
 
-test('withBody updates the body', function () {
+test('withBody updates the body', function (): void {
     $response = new Response(200);
     $newBody = new Stream('New body');
     $newResponse = $response->withBody($newBody);
@@ -77,7 +77,7 @@ test('withBody updates the body', function () {
         ->and($response->getBody())->not->toBe($newBody);
 });
 
-test('withStatus updates status code and reason phrase', function () {
+test('withStatus updates status code and reason phrase', function (): void {
     $response = new Response(200);
     $newResponse = $response->withStatus(404, 'Not Found');
 
@@ -86,7 +86,7 @@ test('withStatus updates status code and reason phrase', function () {
         ->and($response->getStatusCode())->toBe(200);
 });
 
-test('getHeaderLine returns comma-separated header values', function () {
+test('getHeaderLine returns comma-separated header values', function (): void {
     $response = new Response(200, ['Accept' => ['application/json', 'text/html']]);
 
     expect($response->getHeaderLine('Accept'))->toBe('application/json, text/html')

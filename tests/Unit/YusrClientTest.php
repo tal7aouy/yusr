@@ -5,17 +5,17 @@ use Psr\Http\Message\ResponseInterface;
 use Yusr\Http\Response;
 use Yusr\Http\YusrClient;
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->client = YusrClient::getInstance();
 });
 
-test('getInstance returns a singleton instance', function () {
+test('getInstance returns a singleton instance', function (): void {
     $instance1 = YusrClient::getInstance();
     $instance2 = YusrClient::getInstance();
     expect($instance1)->toBe($instance2);
 });
 
-test('HTTP methods call request method with correct parameters', function ($method) {
+test('HTTP methods call request method with correct parameters', function ($method): void {
     $mockClient = Mockery::mock(YusrClient::class)->makePartial();
     $mockClient->shouldAllowMockingProtectedMethods();
     $mockClient->shouldReceive('request')
@@ -27,7 +27,7 @@ test('HTTP methods call request method with correct parameters', function ($meth
     expect($response)->toBeInstanceOf(ResponseInterface::class);
 })->with(['get', 'post', 'put', 'delete', 'patch']);
 
-test('request method creates correct request and calls sendRequest', function () {
+test('request method creates correct request and calls sendRequest', function (): void {
     $mockClient = Mockery::mock(YusrClient::class)->makePartial();
     $mockClient->shouldAllowMockingProtectedMethods();
     $mockClient->shouldReceive('sendRequest')
@@ -37,7 +37,7 @@ test('request method creates correct request and calls sendRequest', function ()
     $response = $mockClient->request('GET', 'https://api.example.com', ['query' => ['param' => 'value']]);
     expect($response)->toBeInstanceOf(ResponseInterface::class);
 });
-test('sendRequest handles successful requests', function () {
+test('sendRequest handles successful requests', function (): void {
     $mockClient = Mockery::mock(YusrClient::class)->makePartial();
     $mockClient->shouldAllowMockingProtectedMethods();
 
@@ -82,7 +82,7 @@ test('sendRequest handles successful requests', function () {
         'completed' => false
     ]);
 });
-test('appendQueryString correctly appends query parameters to URI', function () {
+test('appendQueryString correctly appends query parameters to URI', function (): void {
     $client = YusrClient::getInstance();
     $reflectionClass = new ReflectionClass(YusrClient::class);
     $method = $reflectionClass->getMethod('appendQueryString');
@@ -95,6 +95,6 @@ test('appendQueryString correctly appends query parameters to URI', function () 
 
     expect($result)->toBe('https://api.example.com?param1=value1&param2=value2');
 });
-afterEach(function () {
+afterEach(function (): void {
     Mockery::close();
 });

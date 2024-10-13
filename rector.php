@@ -10,6 +10,7 @@ return RectorConfig::configure()
         __DIR__ . '/tests',
     ])
     ->withPhpSets()
+    // Disable type coverage to avoid false positives
     ->withTypeCoverageLevel(0)
     ->withPreparedSets(
         deadCode: true,

@@ -57,6 +57,6 @@
         "lint": "pint --test",
         "lint:fix": "pint",
         "test": "./vendor/bin/pest",
-        "rector": "./vendor/bin/rector process src"
+        "rector": "./vendor/bin/rector process src tests"
     }
 }

@@ -4,7 +4,7 @@ use Yusr\Http\Request;
 use Yusr\Http\Stream;
 use Yusr\Http\Uri;
 
-test('Request can be created with minimal parameters', function () {
+test('Request can be created with minimal parameters', function (): void {
     $request = new Request('GET', 'https://example.com');
 
     expect($request->getMethod())->toBe('GET');
@@ -12,7 +12,7 @@ test('Request can be created with minimal parameters', function () {
     expect($request->getProtocolVersion())->toBe('1.1');
 });
 
-test('Request with custom headers and body', function () {
+test('Request with custom headers and body', function (): void {
     $body = new Stream('test body');
     $request = new Request(
         'POST',
@@ -30,7 +30,7 @@ test('Request with custom headers and body', function () {
     expect($request->getBody())->toBe($body);
 });
 
-test('withRequestTarget modifies the request target', function () {
+test('withRequestTarget modifies the request target', function (): void {
     $request = new Request('GET', 'https://example.com');
     $newRequest = $request->withRequestTarget('/custom-target');
 
@@ -38,7 +38,7 @@ test('withRequestTarget modifies the request target', function () {
     expect($request->getRequestTarget())->not->toBe('/custom-target');
 });
 
-test('withMethod changes the HTTP method', function () {
+test('withMethod changes the HTTP method', function (): void {
     $request = new Request('GET', 'https://example.com');
     $newRequest = $request->withMethod('POST');
 
@@ -46,7 +46,7 @@ test('withMethod changes the HTTP method', function () {
     expect($request->getMethod())->toBe('GET');
 });
 
-test('withUri updates the URI and optionally the host header', function () {
+test('withUri updates the URI and optionally the host header', function (): void {
     $request = new Request('GET', 'https://example.com');
     $newUri = new Uri('https://api.example.com');
 
@@ -58,7 +58,7 @@ test('withUri updates the URI and optionally the host header', function () {
     expect($preserveHostRequest->getHeaderLine('Host'))->toBe('example.com');
 });
 
-test('header methods work correctly', function () {
+test('header methods work correctly', function (): void {
     $request = new Request('GET', 'https://example.com', ['X-Test' => 'value']);
 
     expect($request->hasHeader('X-Test'))->toBeTrue();
@@ -76,7 +76,7 @@ test('header methods work correctly', function () {
     expect($removedRequest->hasHeader('X-New'))->toBeFalse();
 });
 
-test('withBody replaces the body stream', function () {
+test('withBody replaces the body stream', function (): void {
     $request = new Request('GET', 'https://example.com');
     $newBody = new Stream('new body content');
 
@@ -86,7 +86,7 @@ test('withBody replaces the body stream', function () {
     expect($request->getBody())->not->toBe($newBody);
 });
 
-test('getHeaders returns all headers', function () {
+test('getHeaders returns all headers', function (): void {
     $headers = [
         'Content-Type' => 'application/json',
         'X-Custom' => ['value1', 'value2'],
