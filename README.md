@@ -40,18 +40,13 @@ use Yusr\Http\YusrClient;
 $client = YusrClient::getInstance();
 
 // Make a GET request
-$response = $client->get('https://api.example.com/users');
-
-// Make a POST request with JSON body
-$response = $client->post('https://api.example.com/users', [
-    'headers' => ['Content-Type' => 'application/json'],
-    'body' => json_encode(['name' => 'John Doe', 'email' => 'john@example.com']),
-]);
+$response = $client->get('https://jsonplaceholder.typicode.com/posts');
 
 // Access response data
 $statusCode = $response->getStatusCode();
 $body = $response->getBody()->getContents();
 $headers = $response->getHeaders();
+echo $body. PHP_EOL;
 ```
 
 ## 🛠 Configuration
