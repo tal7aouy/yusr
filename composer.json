@@ -54,7 +54,6 @@
     "scripts": {
         "lint": "pint --test",
         "lint:fix": "pint",
-        "test": "pest",
-        "format": "pint"
+        "test": "./vendor/bin/pest"
     }
 }
