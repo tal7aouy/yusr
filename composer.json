@@ -1,6 +1,7 @@
 {
     "name": "tal7aouy/yusr",
     "description": "A lightweight HTTP client library for PHP inspired by Guzzle.",
+     "version": "1.0.1"
     "type": "library",
     "license": "MIT",
     "keywords": [
