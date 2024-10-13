@@ -26,7 +26,7 @@ class YusrClient implements ClientInterface
 
     public static function getInstance(array $options = []): YusrClient
     {
-        if (self::$instance === null) {
+        if (! self::$instance instanceof \Yusr\Http\YusrClient) {
             self::$instance = new self($options);
         }
         return self::$instance;
@@ -34,7 +34,7 @@ class YusrClient implements ClientInterface
 
     public function sendRequest(RequestInterface $request): ResponseInterface
     {
-        $options = $this->prepareOptions($request);
+        $options = $this->prepareOptions();
         $curl = $this->createCurlHandleWrapper($request, $options);
 
         $responseBody = $this->curlExec($curl);
@@ -132,10 +132,9 @@ class YusrClient implements ClientInterface
         return $this->sendRequest($request);
     }
 
-    private function prepareOptions(RequestInterface $request): array
+    private function prepareOptions(): array
     {
-        $options = $this->defaultOptions;
-        return $options;
+        return $this->defaultOptions;
     }
 
 
@@ -194,8 +193,6 @@ class YusrClient implements ClientInterface
         $separator = parse_url($uri, PHP_URL_QUERY) ? '&' : '?';
         return $uri . $separator . $queryString;
     }
-
-    private function __clone() {}
 
     public function __wakeup()
     {

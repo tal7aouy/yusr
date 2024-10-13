@@ -114,11 +114,7 @@ class Request implements RequestInterface
     {
         $new = clone $this;
         $name = strtolower($name);
-        if (isset($new->headers[$name])) {
-            $new->headers[$name] = array_merge($new->headers[$name], (array) $value);
-        } else {
-            $new->headers[$name] = (array) $value;
-        }
+        $new->headers[$name] = isset($new->headers[$name]) ? array_merge($new->headers[$name], (array) $value) : (array) $value;
         return $new;
     }
 

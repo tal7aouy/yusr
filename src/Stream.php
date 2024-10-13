@@ -34,7 +34,7 @@ class Stream implements StreamInterface
 
     public function detach()
     {
-        if (! isset($this->stream)) {
+        if ($this->stream === null) {
             return null;
         }
 
@@ -52,7 +52,7 @@ class Stream implements StreamInterface
 
     public function tell(): int
     {
-        if (! isset($this->stream)) {
+        if ($this->stream === null) {
             throw new \RuntimeException('Stream is detached');
         }
 
@@ -66,17 +66,17 @@ class Stream implements StreamInterface
 
     public function eof(): bool
     {
-        return ! isset($this->stream) || feof($this->stream);
+        return $this->stream === null || feof($this->stream);
     }
 
     public function isSeekable(): bool
     {
-        return isset($this->stream) && $this->getMetadata('seekable');
+        return $this->stream !== null && $this->getMetadata('seekable');
     }
 
     public function seek($offset, $whence = SEEK_SET): void
     {
-        if (! isset($this->stream)) {
+        if ($this->stream === null) {
             throw new \RuntimeException('Stream is detached');
         }
         if (! $this->isSeekable()) {
@@ -94,12 +94,12 @@ class Stream implements StreamInterface
 
     public function isWritable(): bool
     {
-        return isset($this->stream) && is_writable($this->getMetadata('uri'));
+        return $this->stream !== null && is_writable($this->getMetadata('uri'));
     }
 
     public function write($string): int
     {
-        if (! isset($this->stream)) {
+        if ($this->stream === null) {
             throw new \RuntimeException('Stream is detached');
         }
         if (! $this->isWritable()) {
@@ -118,12 +118,12 @@ class Stream implements StreamInterface
 
     public function isReadable(): bool
     {
-        return isset($this->stream) && is_readable($this->getMetadata('uri'));
+        return $this->stream !== null && is_readable($this->getMetadata('uri'));
     }
 
     public function read($length): string
     {
-        if (! isset($this->stream)) {
+        if ($this->stream === null) {
             throw new \RuntimeException('Stream is detached');
         }
         if (! $this->isReadable()) {
@@ -143,7 +143,7 @@ class Stream implements StreamInterface
 
     public function getContents(): string
     {
-        if (! isset($this->stream)) {
+        if ($this->stream === null) {
             throw new \RuntimeException('Stream is detached');
         }
 
@@ -157,7 +157,7 @@ class Stream implements StreamInterface
 
     public function getMetadata($key = null)
     {
-        if (! isset($this->stream)) {
+        if ($this->stream === null) {
             return $key ? null : [];
         }
 
