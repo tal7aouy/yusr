@@ -38,3 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - add rector for code style
 - fix code style issues
 - correct some typos & improve readme
+
+## [1.0.2] - 2024-10-14
+
+## [1.0.3] - 2024-10-19
