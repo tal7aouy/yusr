@@ -1,9 +1,10 @@
 <?php
 
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
+use Yusr\Http\Uri;
 use Yusr\Http\Response;
 use Yusr\Http\YusrClient;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 
 beforeEach(function (): void {
     $this->client = YusrClient::getInstance();
@@ -95,6 +96,39 @@ test('appendQueryString correctly appends query parameters to URI', function ():
 
     expect($result)->toBe('https://api.example.com?param1=value1&param2=value2');
 });
+
+test('sendRequest enforces rate limit', function (): void {
+    $client = YusrClient::getInstance();
+    $reflectionClass = new ReflectionClass(YusrClient::class);
+
+    $rateLimitProperty = $reflectionClass->getProperty('rateLimit');
+    $rateLimitProperty->setAccessible(true);
+    $rateLimit = $rateLimitProperty->getValue($client);
+
+    // Create a mock request
+    $mockRequest = Mockery::mock(RequestInterface::class);
+
+    // Create a valid URI instance
+    $mockUri = new Uri('https://jsonplaceholder.typicode.com/todos');
+
+    // Set up the mock request to return the valid URI
+    $mockRequest->shouldReceive('getUri')->andReturn($mockUri);
+    $mockRequest->shouldReceive('getMethod')->andReturn('GET');
+    $mockRequest->shouldReceive('getHeaders')->andReturn([]);
+    $mockRequest->shouldReceive('getBody->getSize')->andReturn(0);
+
+    // Simulate the maximum allowed requests
+    for ($i = 0; $i < $rateLimit; $i++) {
+        $client->sendRequest($mockRequest);
+    }
+    // Now, the next call to sendRequest should trigger the rate limit enforcement
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage('Rate limit exceeded'); // Adjust this message based on your implementation
+
+    // This should wait until the rate limit resets
+    $client->sendRequest($mockRequest);
+});
+
 afterEach(function (): void {
     Mockery::close();
 });

@@ -19,6 +19,11 @@ class YusrClient implements ClientInterface
         'verify' => true,
         'headers' => [],
     ];
+    private int $requestCount = 0;
+    private int $rateLimit = 10; // Maximum requests allowed
+    private int $rateLimitTimeFrame = 60; // Time frame in seconds
+    private ?float $firstRequestTime = null;
+
     private function __construct(array $options = [])
     {
         $this->defaultOptions = array_merge($this->defaultOptions, $options);
@@ -34,6 +39,8 @@ class YusrClient implements ClientInterface
 
     public function sendRequest(RequestInterface $request): ResponseInterface
     {
+        $this->enforceRateLimit();
+
         $options = $this->prepareOptions();
         $curl = $this->createCurlHandleWrapper($request, $options);
 
@@ -201,5 +208,22 @@ class YusrClient implements ClientInterface
     protected function curlSetopt($curl, $option, $value)
     {
         return curl_setopt($curl, $option, $value);
+    }
+    private function enforceRateLimit(): void
+    {
+        $currentTime = microtime(true);
+
+        if ($this->firstRequestTime === null || ($currentTime - $this->firstRequestTime) > $this->rateLimitTimeFrame) {
+            // Reset the count and time frame
+            $this->requestCount = 1;
+            $this->firstRequestTime = $currentTime;
+        } else {
+            if ($this->requestCount >= $this->rateLimit) {
+                // Throw an exception if the rate limit is exceeded
+                throw new \Exception("Rate limit exceeded");
+            } else {
+                $this->requestCount++;
+            }
+        }
     }
 }
