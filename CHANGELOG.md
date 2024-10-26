@@ -42,3 +42,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.2] - 2024-10-14
 
 ## [1.0.3] - 2024-10-19
+
+## [1.0.4] - 2024-10-27
+
+### Added
+- Implemented comprehensive retry mechanism with ExponentialBackoff strategy
+- Added specific exception classes for better error handling:
+  - NetworkException for connection issues
+  - TimeoutException for request timeouts
+  - SSLException for SSL/TLS related errors
+  - RateLimitException for rate limiting
+- Enhanced rate limit enforcement with detailed error messages
+- Added support for retry strategies through RetryStrategy interface
+- Improved error handling with detailed HTTP status codes and messages
+- Added ability to customize retry attempts and backoff delays
+
+### Changed
+- Refactored sendRequest method to handle exceptions more gracefully
+- Updated exception messages to be more descriptive and helpful
+- Modified rate limit error handling to use specific exception class
+- Improved test coverage for rate limiting and error scenarios
+
+### Fixed
+- Fixed rate limit exception message consistency in tests
+- Improved error handling for various curl error scenarios
+- Better handling of HTTP error responses with retry mechanism
