@@ -1,11 +1,11 @@
 <?php
 
-use Yusr\Http\Uri;
-use Yusr\Http\Response;
-use Yusr\Http\YusrClient;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Yusr\Http\Exceptions\RateLimitException;
+use Yusr\Http\Response;
+use Yusr\Http\Uri;
+use Yusr\Http\YusrClient;
 
 beforeEach(function (): void {
     $this->client = YusrClient::getInstance();
@@ -101,21 +101,21 @@ test('appendQueryString correctly appends query parameters to URI', function ():
 test('sendRequest enforces rate limit', function (): void {
     $client = YusrClient::getInstance();
     $reflectionClass = new ReflectionClass(YusrClient::class);
-    
+
     $rateLimitProperty = $reflectionClass->getProperty('rateLimit');
     $rateLimitProperty->setAccessible(true);
     $rateLimit = $rateLimitProperty->getValue($client);
-    
+
     $rateLimitTimeFrameProperty = $reflectionClass->getProperty('rateLimitTimeFrame');
     $rateLimitTimeFrameProperty->setAccessible(true);
     $timeFrame = $rateLimitTimeFrameProperty->getValue($client);
 
     // Create a mock request
     $mockRequest = Mockery::mock(RequestInterface::class);
-    
+
     // Create a valid URI instance
     $mockUri = new Uri('https://jsonplaceholder.typicode.com/todos');
-    
+
     // Set up the mock request to return the valid URI
     $mockRequest->shouldReceive('getUri')->andReturn($mockUri);
     $mockRequest->shouldReceive('getMethod')->andReturn('GET');

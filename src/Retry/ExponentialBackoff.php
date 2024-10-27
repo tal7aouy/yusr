@@ -8,7 +8,7 @@ class ExponentialBackoff implements RetryStrategy
 {
     private int $maxAttempts;
     private int $baseDelay;
-    
+
     public function __construct(int $maxAttempts = 3, int $baseDelay = 1000)
     {
         $this->maxAttempts = $maxAttempts;
