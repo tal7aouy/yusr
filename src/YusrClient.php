@@ -7,6 +7,7 @@ namespace Yusr\Http;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Yusr\Http\Exceptions\RateLimitException;
 use Yusr\Http\Exceptions\RequestException;
 use Yusr\Http\Retry\ExponentialBackoff;
 
@@ -39,47 +40,125 @@ class YusrClient implements ClientInterface
     }
     public function sendRequest(RequestInterface $request): ResponseInterface
     {
-        $this->enforceRateLimit();
-        
+        try {
+            $this->enforceRateLimit();
+        } catch (\Exception $e) {
+            throw new RateLimitException($this->rateLimit, $this->rateLimitTimeFrame, $e);
+        }
+    
         $retryStrategy = new ExponentialBackoff();
         $attempt = 1;
-        
+    
         while (true) {
             try {
                 $options = $this->prepareOptions();
                 $curl = $this->createCurlHandleWrapper($request, $options);
-                
                 $responseBody = $this->curlExec($curl);
                 $responseInfo = $this->curlGetInfo($curl);
-                
+    
                 if ($responseBody === false) {
-                    throw new RequestException(
-                        "cURL error {$this->curlErrno($curl)}: {$this->curlError($curl)}",
+                    $errorCode = $this->curlErrno($curl);
+                    $errorMessage = $this->curlError($curl);
+                    $this->curlClose($curl);
+    
+                    $exception = $this->createExceptionFromCurlError(
+                        $errorCode,
+                        $errorMessage,
+                        $request,
+                        $options
+                    );
+    
+                    if (!$retryStrategy->shouldRetry($attempt, $exception)) {
+                        throw $exception;
+                    }
+    
+                    usleep($retryStrategy->getDelay($attempt) * 1000);
+                    $attempt++;
+                    continue;
+                }
+    
+                $this->curlClose($curl);
+    
+                $statusCode = $responseInfo['http_code'];
+                if ($options['http_errors'] && $statusCode >= 400) {
+                    $exception = new RequestException(
+                        sprintf(
+                            'HTTP request returned status code %d: %s',
+                            $statusCode,
+                            $this->getResponsePhrase($statusCode)
+                        ),
                         $request
                     );
+    
+                    // Only retry on server errors (500+) or specific client errors
+                    if ($statusCode >= 500 || in_array($statusCode, [408, 429])) {
+                        if ($retryStrategy->shouldRetry($attempt, $exception)) {
+                            usleep($retryStrategy->getDelay($attempt) * 1000);
+                            $attempt++;
+                            continue;
+                        }
+                    }
+    
+                    throw $exception;
                 }
-                
-                $this->curlClose($curl);
-                
+    
                 $headers = $this->parseHeaders(substr($responseBody, 0, $responseInfo['header_size']));
                 $body = substr($responseBody, $responseInfo['header_size']);
-                
+    
                 return new Response(
-                    $responseInfo['http_code'],
+                    $statusCode,
                     $headers,
                     $body
                 );
+    
             } catch (\Throwable $e) {
+                // If it's not one of our exceptions, wrap it
+                if (!($e instanceof RequestException)) {
+                    $e = new RequestException('Unexpected error: ' . $e->getMessage(), $request, $e);
+                }
+    
                 if (!$retryStrategy->shouldRetry($attempt, $e)) {
                     throw $e;
                 }
-                
+    
                 usleep($retryStrategy->getDelay($attempt) * 1000);
                 $attempt++;
             }
         }
     }
     
+    private function createExceptionFromCurlError(
+        int $errorCode,
+        string $errorMessage,
+        RequestInterface $request,
+        array $options
+    ): RequestException {
+        switch ($errorCode) {
+            case CURLE_OPERATION_TIMEOUTED:
+                return new TimeoutException($request, $options['timeout']);
+            
+            case CURLE_COULDNT_CONNECT:
+            case CURLE_COULDNT_RESOLVE_HOST:
+            case CURLE_COULDNT_RESOLVE_PROXY:
+                return new NetworkException(
+                    "Connection failed: $errorMessage",
+                    $request
+                );
+            
+            case CURLE_SSL_CONNECT_ERROR:
+            case CURLE_SSL_CERTPROBLEM:
+            case CURLE_SSL_CIPHER:
+            case CURLE_SSL_CACERT:
+                return new SSLException($request, $errorMessage);
+            
+            default:
+                return new RequestException(
+                    "cURL error $errorCode: $errorMessage",
+                    $request
+                );
+        }
+    }
+
     // Add these protected methods to make the class more testable
     protected function curlExec($curl)
     {
@@ -239,5 +318,23 @@ class YusrClient implements ClientInterface
                 $this->requestCount++;
             }
         }
+    }
+    private function getResponsePhrase(int $statusCode): string
+    {
+        $phrases = [
+            400 => 'Bad Request',
+            401 => 'Unauthorized',
+            403 => 'Forbidden',
+            404 => 'Not Found',
+            405 => 'Method Not Allowed',
+            408 => 'Request Timeout',
+            429 => 'Too Many Requests',
+            500 => 'Internal Server Error',
+            502 => 'Bad Gateway',
+            503 => 'Service Unavailable',
+            504 => 'Gateway Timeout',
+        ];
+
+        return $phrases[$statusCode] ?? 'Unknown Status Code';
     }
 }
