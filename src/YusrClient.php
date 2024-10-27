@@ -8,6 +8,7 @@ use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Yusr\Http\Exceptions\RequestException;
+use Yusr\Http\Retry\ExponentialBackoff;
 
 class YusrClient implements ClientInterface
 {
@@ -36,36 +37,49 @@ class YusrClient implements ClientInterface
         }
         return self::$instance;
     }
-
     public function sendRequest(RequestInterface $request): ResponseInterface
     {
         $this->enforceRateLimit();
-
-        $options = $this->prepareOptions();
-        $curl = $this->createCurlHandleWrapper($request, $options);
-
-        $responseBody = $this->curlExec($curl);
-        $responseInfo = $this->curlGetInfo($curl);
-
-        if ($responseBody === false) {
-            $errorMessage = $this->curlError($curl);
-            $errorCode = $this->curlErrno($curl);
-            $this->curlClose($curl);
-            throw new RequestException("cURL error $errorCode: $errorMessage", $request);
+        
+        $retryStrategy = new ExponentialBackoff();
+        $attempt = 1;
+        
+        while (true) {
+            try {
+                $options = $this->prepareOptions();
+                $curl = $this->createCurlHandleWrapper($request, $options);
+                
+                $responseBody = $this->curlExec($curl);
+                $responseInfo = $this->curlGetInfo($curl);
+                
+                if ($responseBody === false) {
+                    throw new RequestException(
+                        "cURL error {$this->curlErrno($curl)}: {$this->curlError($curl)}",
+                        $request
+                    );
+                }
+                
+                $this->curlClose($curl);
+                
+                $headers = $this->parseHeaders(substr($responseBody, 0, $responseInfo['header_size']));
+                $body = substr($responseBody, $responseInfo['header_size']);
+                
+                return new Response(
+                    $responseInfo['http_code'],
+                    $headers,
+                    $body
+                );
+            } catch (\Throwable $e) {
+                if (!$retryStrategy->shouldRetry($attempt, $e)) {
+                    throw $e;
+                }
+                
+                usleep($retryStrategy->getDelay($attempt) * 1000);
+                $attempt++;
+            }
         }
-
-        $this->curlClose($curl);
-
-        $headers = $this->parseHeaders(substr($responseBody, 0, $responseInfo['header_size']));
-        $body = substr($responseBody, $responseInfo['header_size']);
-
-        return new Response(
-            $responseInfo['http_code'],
-            $headers,
-            $body
-        );
     }
-
+    
     // Add these protected methods to make the class more testable
     protected function curlExec($curl)
     {
