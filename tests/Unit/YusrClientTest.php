@@ -5,6 +5,7 @@ use Yusr\Http\Response;
 use Yusr\Http\YusrClient;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Yusr\Http\Exceptions\RateLimitException;
 
 beforeEach(function (): void {
     $this->client = YusrClient::getInstance();
@@ -100,17 +101,21 @@ test('appendQueryString correctly appends query parameters to URI', function ():
 test('sendRequest enforces rate limit', function (): void {
     $client = YusrClient::getInstance();
     $reflectionClass = new ReflectionClass(YusrClient::class);
-
+    
     $rateLimitProperty = $reflectionClass->getProperty('rateLimit');
     $rateLimitProperty->setAccessible(true);
     $rateLimit = $rateLimitProperty->getValue($client);
+    
+    $rateLimitTimeFrameProperty = $reflectionClass->getProperty('rateLimitTimeFrame');
+    $rateLimitTimeFrameProperty->setAccessible(true);
+    $timeFrame = $rateLimitTimeFrameProperty->getValue($client);
 
     // Create a mock request
     $mockRequest = Mockery::mock(RequestInterface::class);
-
+    
     // Create a valid URI instance
     $mockUri = new Uri('https://jsonplaceholder.typicode.com/todos');
-
+    
     // Set up the mock request to return the valid URI
     $mockRequest->shouldReceive('getUri')->andReturn($mockUri);
     $mockRequest->shouldReceive('getMethod')->andReturn('GET');
@@ -121,13 +126,17 @@ test('sendRequest enforces rate limit', function (): void {
     for ($i = 0; $i < $rateLimit; $i++) {
         $client->sendRequest($mockRequest);
     }
-    // Now, the next call to sendRequest should trigger the rate limit enforcement
-    $this->expectException(\Exception::class);
-    $this->expectExceptionMessage('Rate limit exceeded'); // Adjust this message based on your implementation
 
-    // This should wait until the rate limit resets
+    // Now, the next call to sendRequest should trigger the rate limit enforcement
+    $this->expectException(RateLimitException::class);
+    $this->expectExceptionMessage(
+        sprintf('Rate limit of %d requests per %d seconds exceeded', $rateLimit, $timeFrame)
+    );
+
+    // This should throw RateLimitException
     $client->sendRequest($mockRequest);
 });
+
 
 afterEach(function (): void {
     Mockery::close();
