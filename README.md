@@ -1,90 +1,106 @@
+
 # 🚀 YusrClient - A Powerful PHP HTTP Client
 
 <p align="center">
-  <img src="art/logo.png" alt="YusrClient Logo" width="300">
+  <img src="art/logo.png" alt="YusrClient Logo" width="200">
 </p>
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/tal7aouy/yusr.svg?style=flat-square)](https://packagist.org/packages/tal7aouy/yusr)
 [![Total Downloads](https://img.shields.io/packagist/dt/tal7aouy/yusr.svg?style=flat-square)](https://packagist.org/packages/tal7aouy/yusr)
 [![License](https://img.shields.io/packagist/l/tal7aouy/yusr.svg?style=flat-square)](https://packagist.org/packages/tal7aouy/yusr)
 
-YusrClient is a robust and easy-to-use PHP HTTP client that simplifies making HTTP requests in your PHP applications. It implements the PSR-18 HTTP Client interface and provides a fluent API for sending HTTP requests.
+YusrClient is a robust and easy-to-use PHP HTTP client that simplifies making HTTP requests in your PHP applications. Built with modern PHP practices, it implements the PSR-18 HTTP Client interface and provides a fluent API for sending HTTP requests.
 
-## 🌟 Features
+## ✨ Key Features
 
-- 🔒 Implements PSR-18 HTTP Client interface
-- 🛠 Singleton pattern for easy global access
-- 🚦 Supports all major HTTP methods (GET, POST, PUT, DELETE, PATCH)
-- 🔧 Customizable options for each request
-- 🧩 Easy-to-use fluent interface
-- 🔁 Automatic handling of redirects
-- ⏱ Configurable timeout
-- 🔐 SSL verification
+- 🔒 PSR-18 HTTP Client compliant
+- 🛠 Singleton pattern implementation
+- 🚦 Full HTTP method support (GET, POST, PUT, DELETE, PATCH)
+- 🔄 Automatic retry mechanism with exponential backoff
+- 🔧 Highly customizable request options
+- 🧩 Intuitive fluent interface
+- ⏱ Configurable timeouts
+- 🔐 SSL verification support
 
 ## 📦 Installation
-
-You can install the package via composer:
 
 ```bash
 composer require tal7aouy/yusr
 ```
 
-## 🚀 Usage
-
-Here's a quick example of how to use YusrClient:
+## 🚀 Quick Start
 
 ```php
 use Yusr\Http\YusrClient;
 
-// Get the YusrClient instance
+// Get client instance
 $client = YusrClient::getInstance();
 
 // Make a GET request
-$response = $client->get('https://jsonplaceholder.typicode.com/posts');
+$response = $client->get('https://api.example.com/users');
 
-// Access response data
+// Work with response
 $statusCode = $response->getStatusCode();
-$body = $response->getBody()->getContents();
+$data = $response->getBody()->getContents();
 $headers = $response->getHeaders();
-echo $body. PHP_EOL;
 ```
 
-## 🛠 Configuration
-
-You can configure the default options when getting the YusrClient instance:
+## ⚙️ Configuration
 
 ```php
 $client = YusrClient::getInstance([
-    'timeout' => 60,
-    'allow_redirects' => false,
-    'verify' => false,
+    'timeout' => 30,
+    'allow_redirects' => true,
+    'verify' => true,
+    'retry' => [
+        'max_attempts' => 3,
+        'delay' => 1000 // milliseconds
+    ]
 ]);
 ```
 
-## 📘 API Reference
+## 📘 Available Methods
 
-### Available Methods
+### HTTP Methods
+```php
+$client->get(string $uri, array $options = []);
+$client->post(string $uri, array $options = []);
+$client->put(string $uri, array $options = []);
+$client->delete(string $uri, array $options = []);
+$client->patch(string $uri, array $options = []);
+```
 
-- `get(string $uri, array $options = []): ResponseInterface`
-- `post(string $uri, array $options = []): ResponseInterface`
-- `put(string $uri, array $options = []): ResponseInterface`
-- `delete(string $uri, array $options = []): ResponseInterface`
-- `patch(string $uri, array $options = []): ResponseInterface`
-- `request(string $method, string $uri, array $options = []): ResponseInterface`
+### Request Options
+- `query` - Array of URL query parameters
+- `headers` - Custom request headers
+- `body` - Request body (for POST, PUT, PATCH)
+- `timeout` - Request timeout in seconds
+- `allow_redirects` - Follow redirects (boolean)
+- `verify` - SSL certificate verification
+- `retry` - Retry configuration for failed requests
 
-### Options
+## 🔄 Retry Mechanism
 
-- `query`: array of query parameters to add to the URI
-- `headers`: array of headers to send with the request
-- `body`: the body of the request (for POST, PUT, PATCH)
-- `timeout`: request timeout in seconds
-- `allow_redirects`: whether to follow redirects
-- `verify`: whether to verify SSL certificates
+YusrClient includes a sophisticated retry mechanism with exponential backoff:
+
+```php
+$client = YusrClient::getInstance([
+    'retry' => [
+        'max_attempts' => 3,
+        'delay' => 1000,
+        'multiplier' => 2
+    ]
+]);
+```
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are always welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details.
 
-## 📄 License
+## 📝 License
 
-This project is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is licensed under the [MIT License](LICENSE).
+
+## 🙏 Support
+
+If you find this package helpful, please consider giving it a star ⭐️
