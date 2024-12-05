@@ -248,7 +248,7 @@ class YusrClient implements ClientInterface
     private function createCurlHandle(RequestInterface $request, array $options): \CurlHandle
     {
         $curl = curl_init();
-
+    
         $curlOptions = [
             CURLOPT_URL => (string) $request->getUri(),
             CURLOPT_RETURNTRANSFER => true,
@@ -258,16 +258,22 @@ class YusrClient implements ClientInterface
             CURLOPT_TIMEOUT => $options['timeout'],
             CURLOPT_FOLLOWLOCATION => $options['allow_redirects'],
             CURLOPT_SSL_VERIFYPEER => $options['verify'],
+            CURLOPT_ENCODING => '', 
         ];
-
+    
+        if (isset($options['proxy'])) {
+            $curlOptions[CURLOPT_PROXY] = $options['proxy'];
+        }
+    
         if ($request->getBody()->getSize() > 0) {
             $curlOptions[CURLOPT_POSTFIELDS] = (string) $request->getBody();
         }
-
+    
         curl_setopt_array($curl, $curlOptions);
-
+    
         return $curl;
     }
+    
     protected function createCurlHandleWrapper(RequestInterface $request, array $options): \CurlHandle
     {
         return $this->createCurlHandle($request, $options);
