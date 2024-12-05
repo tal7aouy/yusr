@@ -286,14 +286,22 @@ class YusrClient implements ClientInterface
         $headers = [];
         $lines = explode("\n", $headerContent);
         foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) continue;
+            
             $parts = explode(':', $line, 2);
             if (isset($parts[1])) {
-                $headers[trim($parts[0])] = trim($parts[1]);
+                $name = trim($parts[0]);
+                $value = trim($parts[1]);
+                
+                if (!isset($headers[$name])) {
+                    $headers[$name] = [];
+                }
+                $headers[$name][] = $value;
             }
         }
         return $headers;
-    }
-
+    }    
     private function appendQueryString(string $uri, array $query): string
     {
         $queryString = http_build_query($query);
