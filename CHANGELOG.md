@@ -67,3 +67,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed rate limit exception message consistency in tests
 - Improved error handling for various curl error scenarios
 - Better handling of HTTP error responses with retry mechanism
+
+
+## [1.0.5] - 2024-12-08
+
+## Added
+- Enhance curl handle options
+- Improve parsing of headers
+- Configurable rate limit and time frame
