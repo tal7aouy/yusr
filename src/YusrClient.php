@@ -29,7 +29,14 @@ class YusrClient implements ClientInterface
     private function __construct(array $options = [])
     {
         $this->defaultOptions = array_merge($this->defaultOptions, $options);
+        if (isset($options['rate_limit'])) {
+            $this->rateLimit = $options['rate_limit'];
+        }
+        if (isset($options['rate_limit_timeframe'])) {
+            $this->rateLimitTimeFrame = $options['rate_limit_timeframe'];
+        }
     }
+    
 
     public static function getInstance(array $options = []): YusrClient
     {
